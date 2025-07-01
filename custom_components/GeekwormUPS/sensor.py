@@ -181,7 +181,7 @@ class FieldData:
         self.capacity = None
 
 
-class X708Data:
+class UPSData:
     """Structure to represent UPS device"""
 
     def __init__(self):

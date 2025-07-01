@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_I2C_ADDRESS = 'i2c_address'
 CONF_I2C_BUS = 'i2c_bus'
 
-DEFAULT_NAME = 'X750 Sensor'
+DEFAULT_NAME = 'UPS Sensor'
 DEFAULT_I2C_ADDRESS = 0x36
 DEFAULT_I2C_BUS = 1
 
@@ -46,17 +46,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
 ):
-    """Set up the X750 sensor."""
+    """Set up the UPS Sensor"""
     name = config.get(CONF_NAME)
 
-    sensor_handler = await hass.async_add_executor_job(_setup_X750, config)
+    sensor_handler = await hass.async_add_executor_job(_setup_UPS, config)
     if sensor_handler is None:
         return
 
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(
-            X750Sensor(
+            UPSSensor(
                 sensor_handler, variable, SENSOR_TYPES[variable][1], name
             )
         )
@@ -65,50 +65,50 @@ async def async_setup_platform(
     return
 
 
-def _setup_X750(config):
-    """Set up and configure the X750 sensor."""
+def _setup_UPS(config):
+    """Set up and configure the UPS Sensor"""
     from smbus import SMBus
 
     sensor_handler = None
     try:
         i2c_address = config.get(CONF_I2C_ADDRESS)
         bus = SMBus(config.get(CONF_I2C_BUS))
-        sensor = X750(i2c_address, bus)
+        sensor = UPS(i2c_address, bus)
 
     except (RuntimeError, IOError):
-        _LOGGER.error('X750 sensor not detected at 0x%02x', i2c_address)
+        _LOGGER.error('UPS sensor not detected at 0x%02x', i2c_address)
         return None
 
-    sensor_handler = X750Handler(sensor)
+    sensor_handler = UPSHandler(sensor)
 
     sleep(0.5)  # Wait for device to stabilize
     if not sensor_handler.sensor_data.voltage:
-        _LOGGER.error('X750 sensor failed to Initialize')
+        _LOGGER.error('UPS sensor failed to Initialize')
         return None
 
     return sensor_handler
 
 
-class X750Handler:
-    """X750 sensor working in i2C bus."""
+class UPSHandler:
+    """UPS sensor working in i2C bus"""
 
     class SensorData:
-        """Sensor data representation."""
+        """Sensor data representation"""
 
         def __init__(self):
-            """Initialize the sensor data object."""
+            """Initialize the sensor data object"""
             self.voltage = None
             self.capacity = None
 
     def __init__(self, sensor):
-        """Initialize the sensor handler."""
-        self.sensor_data = X750Handler.SensorData()
+        """Initialize the sensor handler"""
+        self.sensor_data = UPSHandler.SensorData()
         self._sensor = sensor
 
         self.update(first_read=True)
 
     def update(self, first_read=False):
-        """Read sensor data."""
+        """Read sensor data"""
         if first_read:
             # Attempt first read, it almost always fails first attempt
             self._sensor.get_sensor_data()
@@ -117,14 +117,14 @@ class X750Handler:
             self.sensor_data.capacity = self._sensor.data.capacity
 
 
-class X750Sensor(Entity):
-    """Implementation of the X750 sensor."""
+class UPSSensor(Entity):
+    """Implementation of the UPS Sensor"""
 
-    def __init__(self, X750_client, sensor_type, temp_unit, name):
-        """Initialize the sensor."""
+    def __init__(self, UPS_client, sensor_type, temp_unit, name):
+        """Initialize the sensor"""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
-        self.X750_client = X750_client
+        self.UPS_client = UPS_client
         self.temp_unit = temp_unit
         self.type = sensor_type
         self._state = None
@@ -132,25 +132,27 @@ class X750Sensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the sensor"""
         return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
-        """Return the state of the sensor."""
+        """Return the state of the sensor"""
         return self._state
 
     @property
     def icon(self):
         """Return the icon of the sensor"""
         if self.type == SENSOR_VOLTAGE:
-            return 'mdi:flash'
+            return 'mdi:sine-wave'
         elif self.type == SENSOR_CAPACITY:
             if isinstance(self._state, int) or isinstance(self._state, float):
-                if self._state >= 100:
-                    return 'mdi:battery'
+                if self._state >= 80:
+                    return 'mdi:battery-high'
                 elif self._state >= 50:
-                    return 'mdi:battery-50'
+                    return 'mdi:battery-medium'
+		elif self._state >= 20
+		    return 'mdi:battery-low' 
                 else:
                     return 'mdi:battery-alert'
             else:
@@ -158,20 +160,20 @@ class X750Sensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
+        """Return the unit of measurement of the sensor"""
         return self._unit_of_measurement
 
     async def async_update(self):
-        """Get the latest data from the X750 and update the states."""
-        await self.hass.async_add_executor_job(self.X750_client.update)
+        """Get the latest data from the UPS and update the states."""
+        await self.hass.async_add_executor_job(self.UPS_client.update)
         if self.type == SENSOR_VOLTAGE:
-            self._state = round(self.X750_client.sensor_data.voltage, 1)
+            self._state = round(self.UPS_client.sensor_data.voltage, 2)
         elif self.type == SENSOR_CAPACITY:
-            self._state = round(self.X750_client.sensor_data.capacity, 1)
+            self._state = round(self.UPS_client.sensor_data.capacity)
 
 
 class FieldData:
-    """Structure for storing X750 sensor data."""
+    """Structure for storing UPS sensor data"""
 
     def __init__(self):
         self.status = None
@@ -179,16 +181,16 @@ class FieldData:
         self.capacity = None
 
 
-class X750Data:
-    """Structure to represent X750 device."""
+class X708Data:
+    """Structure to represent UPS device"""
 
     def __init__(self):
         self.data = FieldData()
 
 
-class X750(X750Data):
+class UPS(UPSData):
     def __init__(self, i2c_addr=DEFAULT_I2C_ADDRESS, i2c_device=None):
-        X750Data.__init__(self)
+        UPSData.__init__(self)
 
         self.i2c_addr = i2c_addr
         self._i2c = i2c_device
@@ -206,7 +208,7 @@ class X750(X750Data):
 
         read = self._i2c.read_word_data(self.i2c_addr, 2)
         swapped = struct.unpack('<H', struct.pack('>H', read))[0]
-        self.data.voltage = swapped * 1.25 / 1000 / 16
+        self.data.voltage = swapped * 1.25 / 1000 / 16,
 
         read = self._i2c.read_word_data(self.i2c_addr, 4)
         swapped = struct.unpack('<H', struct.pack('>H', read))[0]

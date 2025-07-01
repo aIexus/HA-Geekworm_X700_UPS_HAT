@@ -1,0 +1,12 @@
+{
+  "domain": "GeekwormUPS",
+  "name": "Geekworm UPS Sensor",
+  "version": "0.0.1",
+  "documentation": "https://wiki.geekworm.com/X708",
+  "dependencies": [],
+  "codeowners": ["https://github.com/aIexus/HA-Geekworm_X708_UPS_HAT"],
+  "requirements": [
+    "i2csense==0.0.4",
+    "smbus-cffi==0.5.1"
+  ]
+}

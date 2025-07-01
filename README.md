@@ -1,16 +1,16 @@
-# Geekworm x750 UPS
-Home Assistant Geekworm x750 Addon based on Home Assistant Geekworm x720 Addon from user Beduir https://github.com/Beduir/x720.git
+# Geekworm X708 UPS HAT
+Home Assistant Geekworm X708 UPS HAT Add-on based on Home Assistant Geekworm x720 Addon from user Beduir https://github.com/Beduir/x720.git and originated from user dincojazz https://github.com/dincojazz/Geekworm_x750
 
 Change fixes:
-   - 20240411:
-     Fixed deprecated async_add_job with async_add_executor_job
+   - TBD ...
 
 Сompatibility:
-   - Geekworm x750
-   - Geekworm x720
+   - Geekworm X708
+   - Geekworm X720
+   - Geekworm X750
 
 configuration.yaml:
 
 	sensor:
-  	  - platform: x750
-	    name: 'RPi Battery'
+  	  - platform: GeekwormUPS
+	    name: 'RPi UPS Battery'

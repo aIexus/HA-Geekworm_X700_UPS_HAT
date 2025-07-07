@@ -1,5 +1,5 @@
 # Geekworm X700 Series UPS HAT
-Home Assistant Custom Integration for Geekworm X700 Series UPS HAT based from user Beduir https://github.com/Beduir/x720.git and originated from user dincojazz https://github.com/dincojazz/Geekworm_x750
+Home Assistant Custom Integration for RPi Extention Board **Geekworm X700 Series UPS HAT** (_Power Management Board_) based from user Beduir https://github.com/Beduir/x720.git and originated from user dincojazz https://github.com/dincojazz/Geekworm_x750
 
 Change fixes:
    - TBD ...
